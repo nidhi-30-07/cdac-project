@@ -1,0 +1,10 @@
+../Core/Src/mfrc522.c:24:13:MFRC522_Select	1
+../Core/Src/mfrc522.c:29:13:MFRC522_Deselect	1
+../Core/Src/mfrc522.c:34:16:MFRC522_SPI_Transfer	1
+../Core/Src/mfrc522.c:42:13:MFRC522_WriteReg	1
+../Core/Src/mfrc522.c:50:16:MFRC522_ReadReg	1
+../Core/Src/mfrc522.c:60:13:MFRC522_SetBitMask	1
+../Core/Src/mfrc522.c:65:13:MFRC522_ClearBitMask	1
+../Core/Src/mfrc522.c:71:6:MFRC522_Init	2
+../Core/Src/mfrc522.c:96:9:MFRC522_Request	5
+../Core/Src/mfrc522.c:131:9:MFRC522_Anticoll	6

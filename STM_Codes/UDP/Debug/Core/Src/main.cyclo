@@ -1,0 +1,10 @@
+../Core/Src/main.c:111:5:main	9
+../Core/Src/main.c:234:6:SystemClock_Config	3
+../Core/Src/main.c:276:13:MX_SPI1_Init	2
+../Core/Src/main.c:314:13:MX_SPI2_Init	2
+../Core/Src/main.c:352:13:MX_GPIO_Init	1
+../Core/Src/main.c:421:6:HAL_GPIO_EXTI_Callback	2
+../Core/Src/main.c:432:6:udp_send_data	2
+../Core/Src/main.c:460:6:rfid_poll	5
+../Core/Src/main.c:494:6:udp_rx_callback	3
+../Core/Src/main.c:519:6:Error_Handler	1

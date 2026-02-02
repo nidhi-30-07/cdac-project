@@ -11,36 +11,9 @@ typedef struct
     char uid[16];   // cleaned UID (XXXXXXXX)
 } rfid_packet;
 
-/* Function to extract UID from received data */
-void parse_rfid(rfid_packet *pkt)
-{
-    /* remove newline */
-    pkt->raw[strcspn(pkt->raw, "\r\n")] = '\0';
-
-    /* remove UID: prefix */
-    if (strncmp(pkt->raw, "UID:", 4) == 0)
-        strcpy(pkt->uid, pkt->raw + 4);
-    else
-        strcpy(pkt->uid, pkt->raw);
-}
-
-/* Function to check RFID in database */
-int check_rfid(sqlite3 *db, char *uid)
-{
-    sqlite3_stmt *stmt;
-    const char *sql =
-        "SELECT 1 FROM rfid_users WHERE rfid_id = ?;";
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-        return 0;
-
-    sqlite3_bind_text(stmt, 1, uid, -1, SQLITE_STATIC);
-
-    int found = (sqlite3_step(stmt) == SQLITE_ROW);
-
-    sqlite3_finalize(stmt);
-    return found;
-}
+void parse_rfid(rfid_packet *pkt);
+int check_rfid(sqlite3 *db, char *uid);
+void update_last_tapped(sqlite3 *db, char *uid);
 
 int main()
 {
@@ -73,6 +46,9 @@ int main()
     {
         int n = recvfrom(sockfd, pkt.raw, sizeof(pkt.raw) - 1,
                          0, (struct sockaddr *)&stm_addr, &addr_len);
+                         
+        if(n <= 0)
+        	continue;
 
         pkt.raw[n] = '\0';
 
@@ -84,20 +60,65 @@ int main()
 
         if (check_rfid(db, pkt.uid))
         {
+            update_last_tapped(db, pkt.uid);
             sendto(sockfd, "ACK\n", 4, 0,
                    (struct sockaddr *)&stm_addr, addr_len);
-            printf("→ ACK sent\n");
+            printf("ACK sent\n");
         }
         else
         {
             sendto(sockfd, "DENY\n", 5, 0,
                    (struct sockaddr *)&stm_addr, addr_len);
-            printf("→ DENY sent\n");
+            printf("DENY sent\n");
         }
     }
 
     sqlite3_close(db);
     close(sockfd);
     return 0;
+}
+
+void update_last_tapped(sqlite3 *db, char *uid)
+{
+    sqlite3_stmt *stmt;
+    const char *sql =
+        "UPDATE rfid_users SET last_tapped = datetime('now') "
+        "WHERE rfid_id = ?;";
+
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    sqlite3_bind_text(stmt, 1, uid, -1, SQLITE_STATIC);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+}
+
+/* Function to extract UID from received data */
+void parse_rfid(rfid_packet *pkt)
+{
+    /* remove newline */
+    pkt->raw[strcspn(pkt->raw, "\r\n")] = '\0';
+
+    /* remove UID: prefix */
+    if (strncmp(pkt->raw, "UID:", 4) == 0)
+        strcpy(pkt->uid, pkt->raw + 4);
+    else
+        strcpy(pkt->uid, pkt->raw);
+}
+
+/* Function to check RFID in database */
+int check_rfid(sqlite3 *db, char *uid)
+{
+    sqlite3_stmt *stmt;
+    const char *sql =
+        "SELECT 1 FROM rfid_users WHERE rfid_id = ?;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+        return 0;
+
+    sqlite3_bind_text(stmt, 1, uid, -1, SQLITE_STATIC);
+
+    int found = (sqlite3_step(stmt) == SQLITE_ROW);
+
+    sqlite3_finalize(stmt);
+    return found;
 }
 
